@@ -319,7 +319,9 @@ function Music({ ffmpeg, fetchFile }, _totalSeconds) {
     console.log(editor.scene.userData.music);
     const reader = new FileReader();
     reader.onload = function (e) {
+      console.log("onload");
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      console.log(audioContext);
       audioContext.decodeAudioData(
         e.target.result,
         function (buffer) {
@@ -365,6 +367,7 @@ function Music({ ffmpeg, fetchFile }, _totalSeconds) {
       );
     };
     if (file != null) {
+      console.log("000000000000000000");
       musicFile = file;
     }
     reader.readAsArrayBuffer(musicFile);
@@ -1341,7 +1344,8 @@ function Music({ ffmpeg, fetchFile }, _totalSeconds) {
     }
     editor.scene.userData.music = {
       name: fileName,
-      path: musicSelect.getValue(),
+      // path: musicSelect.getValue(),
+      path: fileName,
       audioUrl: audioUrl,
       startTime: startTime,
       endTime: endTime,
