@@ -101,7 +101,7 @@ function VideoEdit(editor) {
         editor,
         _totalSeconds,
         _framesPerSecond,
-        _newWindow
+        _newWindow,
       );
       await videoContainer.add(videoTimeline);
       setSeconds();
