@@ -218,7 +218,8 @@ function Music({ ffmpeg, fetchFile }, _totalSeconds) {
 
   // 서버에서 파일 목록을 가져와 옵션 추가
   function loadMusicFiles() {
-    fetch("../files/music") // 디렉토리 경로를 직접 요청
+    console.log("loadMusicFiles")
+    fetch("https://webboom0.github.io/files/music") // 디렉토리 경로를 직접 요청
       .then((response) => response.text())
       .then((html) => {
         // HTML 파싱하여 파일 목록 추출
@@ -228,6 +229,7 @@ function Music({ ffmpeg, fetchFile }, _totalSeconds) {
         const fileNames = links
           .map((link) => link.getAttribute("href"))
           .filter((fileName) => fileName.endsWith(".mp3"));
+         console.log(fileNames)
         addMusicOptions(fileNames);
       })
       .catch((error) => {
