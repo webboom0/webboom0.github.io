@@ -23,12 +23,12 @@ function Music({ ffmpeg, fetchFile }, _totalSeconds) {
   fileInput.setClass("fileInput");
   fileInput.dom.setAttribute("type", "file");
   fileInput.dom.setAttribute("accept", "audio/*");
-  // musicControls.add(fileInput);
+  musicControls.add(fileInput);
 
   //   select box
   let musicSelect = new UISelect("select");
   musicSelect.setId("musicSelect");
-  musicControls.add(musicSelect);
+  // musicControls.add(musicSelect);
   //   start time
   const startTimeUi = new UINumber();
   startTimeUi.setId("startTime");
@@ -171,13 +171,30 @@ function Music({ ffmpeg, fetchFile }, _totalSeconds) {
     }
   };
 
-  // fileInput.dom.addEventListener("change", function (event) {
-  //   const file = event.target.files[0];
-  //   if (file) {
-  //     audioUrl = URL.createObjectURL(file);
-  //     loadMusic(file);
-  //   }
-  // });
+  fileInput.dom.addEventListener("change", function (event) {
+    console.log("fileInput@@@@@@@@@@@@@@@@@@");
+    const file = event.target.files[0];
+    Initializing = false;
+    if (file) {
+      audioUrl = URL.createObjectURL(file);
+      console.log(audioUrl);
+      filenameEl.textContent = getFileName(file.name);
+      filenameEl.classList.add("flowing");
+      if (isPlaying) {
+        // 정지 (Stop) 로직
+        stopPlayback();
+        // 아이콘을 play로 변경
+        playButton.dom.innerHTML = '<i class="fas fa-play"></i>';
+        playButton.dom.title = "Play";
+
+        // 현재 시간 저장
+        audioState.currentTime = audioContext.currentTime - playStartTime;
+      }
+
+      setDisabled.all(); // 버튼 비활성화
+      loadMusic(file);
+    }
+  });
   // 방법 2: split 사용
   const getFileName = (path) => {
     // const filePath_encoding = encodeURIComponent(filePath);
@@ -292,7 +309,7 @@ function Music({ ffmpeg, fetchFile }, _totalSeconds) {
       });
   }
 
-  function loadMusic() {
+  function loadMusic(file = null) {
     audioPlayer.src = audioUrl;
     console.log("loadMusic");
     console.log(audioPlayer);
@@ -347,6 +364,9 @@ function Music({ ffmpeg, fetchFile }, _totalSeconds) {
         },
       );
     };
+    if (file != null) {
+      musicFile = file;
+    }
     reader.readAsArrayBuffer(musicFile);
   }
   cutButton.dom.addEventListener("click", async (e) => {
