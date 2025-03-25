@@ -23,7 +23,7 @@ function MenubarFile(editor) {
   newButton.onClick(function () {
     if (confirm("Any unsaved data will be lost. Are you sure?")) {
       editor.clear();
-      location.reload();
+      // location.reload();
     }
   });
   options.add(newButton);
@@ -297,7 +297,7 @@ function MenubarFile(editor) {
         saveArrayBuffer(result, "scene.glb");
       },
       undefined,
-      { binary: true, animations: optimizedAnimations }
+      { binary: true, animations: optimizedAnimations },
     );
   });
   exportSubmenu.add(option);
@@ -329,7 +329,7 @@ function MenubarFile(editor) {
         saveString(JSON.stringify(result, null, 2), "scene.gltf");
       },
       undefined,
-      { animations: optimizedAnimations }
+      { animations: optimizedAnimations },
     );
   });
   exportSubmenu.add(option);
@@ -392,7 +392,7 @@ function MenubarFile(editor) {
       function (result) {
         saveArrayBuffer(result, "model-binary.ply");
       },
-      { binary: true }
+      { binary: true },
     );
   });
   exportSubmenu.add(option);
@@ -427,7 +427,7 @@ function MenubarFile(editor) {
 
     saveArrayBuffer(
       exporter.parse(editor.scene, { binary: true }),
-      "model-binary.stl"
+      "model-binary.stl",
     );
   });
   exportSubmenu.add(option);

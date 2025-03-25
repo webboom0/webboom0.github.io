@@ -26,7 +26,7 @@ class History {
   }
 
   execute(cmd, optionalName) {
-    console.log("HISOTRY-execute");
+    // console.log("HISOTRY-execute");
     const lastCmd = this.undos[this.undos.length - 1];
     const timeDifference = Date.now() - this.lastCmdTime;
 
@@ -70,11 +70,11 @@ class History {
     this.editor.signals.historyChanged.dispatch(cmd);
 
     // 현재 히스토리 JSON 객체를 콘솔에 출력
-    console.log("Current History JSON:", JSON.stringify(cmd.toJSON(), null, 2));
+    // console.log("Current History JSON:", JSON.stringify(cmd.toJSON(), null, 2));
   }
 
   undo() {
-    console.log("HISOTRY-undo");
+    // console.log("HISOTRY-undo");
     if (this.historyDisabled) {
       alert(this.editor.strings.getKey("prompt/history/forbid"));
       return;
@@ -100,7 +100,7 @@ class History {
   }
 
   redo() {
-    console.log("HISOTRY-redo");
+    // console.log("HISOTRY-redo");
     if (this.historyDisabled) {
       alert(this.editor.strings.getKey("prompt/history/forbid"));
       return;
@@ -155,7 +155,7 @@ class History {
   }
 
   fromJSON(json) {
-    console.log("HISOTRY-fromJSON");
+    // console.log("HISOTRY-fromJSON");
     if (json === undefined) return;
 
     for (let i = 0; i < json.undos.length; i++) {

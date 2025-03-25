@@ -254,7 +254,7 @@ function Music({ ffmpeg, fetchFile }, _totalSeconds) {
       });
   }
   // 파일 목록 로드
-  loadMusicFiles();
+  // loadMusicFiles();
 
   // 셀렉트 박스 변경 이벤트
   musicSelect.dom.addEventListener("change", async function (event) {

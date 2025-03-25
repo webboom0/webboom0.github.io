@@ -106,9 +106,9 @@ function VideoEdit(editor) {
       await videoContainer.add(videoTimeline);
       setSeconds();
 
-      // 초기화가 완료된 후 onLoad 호출
-      if (videoTimeline && typeof videoTimeline.onLoad === "function") {
-        videoTimeline.onLoad();
+      // 초기화가 완료된 후 onload 호출
+      if (videoTimeline && typeof videoTimeline.onload === "function") {
+        videoTimeline.onload();
       }
       return videoTimeline;
     } catch (error) {
@@ -145,11 +145,11 @@ function VideoEdit(editor) {
         videoContainer.remove(videoTimeline);
         // 새로운 타임라인 초기화
         initVideoTimeline();
-        videoTimeline.onLoad();
-        console.log("VideoTimeline onLoad called after object removed");
+        // videoTimeline.onload();
+        console.log("VideoTimeline onload called after object removed");
       }
     } catch (error) {
-      console.error("Error calling onLoad after object removed:", error);
+      console.error("Error calling onload after object removed:", error);
     }
   });
 

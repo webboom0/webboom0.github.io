@@ -1,51 +1,196 @@
 import * as THREE from "three";
 import { UIPanel, UIRow, UIButton, UIText } from "./libs/ui.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { Render } from "./VideoEdit.Render.js";
 
 function VideoEditTimeline(
   editor,
   _totalSeconds,
   _framesPerSecond,
-  _newWindow
+  _newWindow,
 ) {
   console.log("VideoEditTimeline");
-  const plane = {
-    planeId: "38415372-2e99-4c9a-a1ba-b6d9a1977f92",
+  function setMeshesNonSelectable(scene) {
+    console.log("setMeshesNonSelectable");
+    scene.traverse((object) => {
+      if (object.isGroup) {
+        object.traverse((child) => {
+          if (child.isMesh) {
+            child.userData.isBackground = true;
+            child.userData.notSelectable = true;
+            child.userData.notEditable = true;
+            child.userData.excludeFromTimeline = true;
+            child.userData.hideInScenePanel = true; // scene 패널에서 숨기기 위한 플래그
+            child.raycast = () => null;
+          }
+        });
+      }
+    });
+  }
+
+  const viewer = document.getElementById("viewport");
+  if (viewer) {
+    viewer.addEventListener("contextmenu", function (e) {
+      console.log("viewport 우클릭");
+      // event.preventDefault();
+      // event.stopPropagation();
+      console.log(_selectedKeyframeCharacter);
+      // 현재 선택된 객체 유지
+      if (_selectedKeyframeCharacter) {
+        const selector = Children.getChildren(_selectedKeyframeCharacter);
+        editor.signals.objectSelected.dispatch(selector);
+        showKeyframeMenu(e.target, e);
+      }
+    });
+  }
+
+  const background = {
     create: function () {
-      console.log("createPlane");
-      console.log(Children.haschildren(this.planeId));
-      if (!Children.haschildren(this.planeId)) {
-        console.log("바닥생성");
-        const plane = new THREE.Mesh(
-          new THREE.PlaneGeometry(10, 10),
-          new THREE.MeshStandardMaterial({ color: 0x808080 })
-        );
-        plane.receiveShadow = true;
-        plane.uuid = "38415372-2e99-4c9a-a1ba-b6d9a1977f92";
+      console.log("background");
+
+      // 기존 배경 객체 찾기
+      const existingBackground = editor.scene.children.find(
+        (child) => child.name === "Background" || child.userData.isBackground,
+      );
+
+      // 이미 배경이 있으면 생성하지 않음
+      if (existingBackground) {
+        console.log("Background already exists");
+
+        // 기존 배경 객체의 속성 재설정
+        existingBackground.traverse((child) => {
+          if (child.isMesh) {
+            child.userData.isBackground = true;
+            child.userData.notSelectable = true;
+            child.userData.notEditable = true;
+            // child.userData.excludeFromTimeline = true;
+            child.raycast = () => null;
+          }
+        });
+
+        // Transform Controls 이벤트 재설정
+        editor.signals.objectSelected.remove(background.onObjectSelected);
+        editor.signals.objectSelected.add(background.onObjectSelected);
+
+        return;
+      }
+
+      const loader = new OBJLoader();
+
+      loader.load(
+        "/files/background.obj",
+        (object) => {
+          if (!editor.scene || !editor.scene.children) {
+            console.log("Scene or children not initialized yet");
+            return;
+          }
+
+          object.name = "Background";
+          object.position.set(-97.17106296034069, 0, 50.12830519275826);
+          object.scale.set(6.18, 7.46, 9.88);
+          /*
+          // 객체를 보이지만 선택/편집 불가능하게 설정
+          object.userData.isBackground = true;
+          object.userData.notSelectable = true;
+          object.userData.notEditable = true;
+          // 객체의 모든 메시에 대해서도 선택/편집 불가능하게 설정
+          object.traverse((child) => {
+            if (child.isMesh) {
+              child.userData.isBackground = true;
+              child.userData.notSelectable = true;
+              child.userData.notEditable = true;
+              // 마우스 이벤트 무시
+              child.raycast = () => {};
+            }
+          });
+          editor.scene.add(object);
+          editor.scene.background = true; // 백그라운드 생성 상태 저장
+          console.log("scene.background:", editor.scene.background);
+*/
+
+          // 메시 재질 설정 수정
+          object.traverse((child) => {
+            if (child.isMesh) {
+              // child.material = new THREE.MeshStandardMaterial({
+              //   color: 0x808080,
+              //   side: THREE.DoubleSide,
+              //   transparent: true,
+              //   opacity: 1,
+              //   depthTest: true,
+              //   depthWrite: true,
+              // });
+
+              // 선택/편집 불가능 설정
+              child.userData.isBackground = true;
+              child.userData.notSelectable = true;
+              child.userData.notEditable = true;
+              // child.userData.excludeFromTimeline = true;
+              child.raycast = () => null;
+            }
+          });
+
+          // 객체 자체에도 설정
+          object.userData.isBackground = true;
+          object.userData.notSelectable = true;
+          object.userData.notEditable = true;
+          // object.userData.excludeFromTimeline = true;
+
+          editor.scene.add(object);
+          // scene 패널 업데이트를 위한 시그널 발생
+          editor.signals.sceneGraphChanged.dispatch();
+          editor.scene.userData.hasBackground = true;
+
+          // Transform Controls 이벤트 설정
+          editor.signals.objectSelected.remove(background.onObjectSelected);
+          editor.signals.objectSelected.add(background.onObjectSelected);
+
+          console.log("Background loaded successfully");
+        },
+        undefined,
+        (error) => {
+          console.error("Error loading background:", error);
+        },
+      );
+    },
+
+    onObjectSelected: function (selected) {
+      if (
+        selected &&
+        (selected.name === "Background" || selected.userData.isBackground)
+      ) {
+        editor.selected = null;
+        editor.signals.objectSelected.dispatch(null);
       }
     },
   };
 
   let editorSceneChildrenCall = false;
   console.log("editor");
-  console.log(editor);
+  console.log(editor.scene.children.length);
+  // 객체가 scene에 추가될 때마다 호출
+  editor.signals.objectAdded.add((object) => {
+    if (object.isGroup) {
+      setMeshesNonSelectable(object);
+    }
+  });
+  // 새 파일일 경우에만 Background 생성
+  if (editor.scene.children.length === 0) {
+    background.create();
+  }
   let editorSceneChildrenCallIntervalTime = 0;
   const editorSceneChildrenCallInterval = setInterval(() => {
     console.log("editorSceneChildrenCallInterval");
     console.log(editor.scene.children.length);
     if (Object.keys(editor.scene.userData).length > 0) {
       editorSceneChildrenCall = true;
-      plane.create(); // 바닥 생성
+      background.create(); // 바닥 생성
       onload(); // 타임라인 생성
     }
     editorSceneChildrenCallIntervalTime++;
     if (editorSceneChildrenCallIntervalTime > 30) {
       clearInterval(editorSceneChildrenCallInterval);
     }
-    // plane.create(); // 바닥 생성
-    // onload(); // 타임라인 생성
-    // clearInterval(editorSceneChildrenCallInterval);
 
     if (editorSceneChildrenCall) {
       clearInterval(editorSceneChildrenCallInterval);
@@ -277,6 +422,38 @@ function VideoEditTimeline(
     }
     console.log("onload");
 
+    // Background 객체 체크 및 정리
+    const backgrounds = editor.scene.children.filter(
+      (child) => child.name === "Background" || child.userData.isBackground,
+    );
+
+    // 여러 개의 Background가 있다면 첫 번째만 남기고 나머지 제거
+    if (backgrounds.length > 1) {
+      console.log("Removing duplicate backgrounds");
+      backgrounds.slice(1).forEach((bg) => {
+        editor.scene.remove(bg);
+      });
+    }
+
+    // 남은 Background의 속성 재설정
+    if (backgrounds.length > 0) {
+      const background = backgrounds[0];
+      background.traverse((child) => {
+        if (child.isMesh) {
+          child.userData.isBackground = true;
+          child.userData.notSelectable = true;
+          child.userData.notEditable = true;
+          child.userData.excludeFromTimeline = true;
+          child.raycast = () => null;
+        }
+      });
+
+      background.userData.isBackground = true;
+      background.userData.notSelectable = true;
+      background.userData.notEditable = true;
+      background.userData.excludeFromTimeline = true;
+    }
+
     const keyframes = editor.scene.userData.keyframes;
     if (!keyframes) {
       console.log("No keyframes found. Exiting function.");
@@ -449,13 +626,17 @@ function VideoEditTimeline(
     _selectedKeyframeCharacter = characterUuid; // 선택된 키프레임 캐릭터
     selectedObject(characterUuid); // 선택된 객체 설정
 
+    editor.selected = Children.getChildren(characterUuid);
+    console.log("select");
+    console.log(editor.selected);
+
     const trackUuid = target.parentElement.getAttribute("uuid");
     timelineObjectActive(trackUuid); // 타임라인 객체 활성화
     target.classList.add("active"); // 키프레임 버튼 활성화
     // 키프레임 우측클릭시 메뉴 표시
     target.addEventListener("contextmenu", function (e) {
       e.preventDefault(); // 기본 우클릭 메뉴를 방지합니다.
-      showKeyframeMenu(target); // 키프레임 메뉴 표시
+      showKeyframeMenu(target, e); // 키프레임 메뉴 표시
     });
     // updateCurrentFrameBar(keyNumber); // 현재 프레임 바 업데이트
     interpolateAnimation(keyNumber); // 현재 키프레임바 업데이트
@@ -463,7 +644,7 @@ function VideoEditTimeline(
     // addKeyframe(keyNumber, character, target);
   }
 
-  function showKeyframeMenu(target) {
+  function showKeyframeMenu(target, event) {
     console.log("showKeyframeMenu");
     console.log(target);
     const keyframeMenu = document.getElementById("keyframeMenu");
@@ -471,8 +652,19 @@ function VideoEditTimeline(
     const rect = target.getBoundingClientRect();
     console.log(rect);
     // 메뉴 위치 설정
-    keyframeMenu.style.left = `${rect.left}px`;
-    keyframeMenu.style.top = `${rect.top}px`;
+    // viewer인 경우 마우스 위치 사용, 아닌 경우 target의 위치 사용
+    console.log("target");
+    console.log(target.tagName);
+    if (target.tagName === "CANVAS") {
+      keyframeMenu.style.left = `${event.clientX}px`;
+      keyframeMenu.style.top = `${event.clientY}px`;
+    } else {
+      const rect = target.getBoundingClientRect();
+      keyframeMenu.style.left = `${rect.left}px`;
+      keyframeMenu.style.top = `${rect.top}px`;
+    }
+    // keyframeMenu.style.left = `${rect.left}px`;
+    // keyframeMenu.style.top = `${rect.top}px`;
     // keyframeMenu.setStyle("left", [`${rect.left}px`]);
     // keyframeMenu.setStyle("top", [`${rect.top}px`]);
 
@@ -510,11 +702,9 @@ function VideoEditTimeline(
     }
 
     const character = Children.getChildren(characterUuid);
-    console.log("@@@@@@@@@@@@@@@");
-    console.log(character.position);
     const keyframes = editor.scene.userData.keyframes[characterUuid];
     const existingIndex = keyframes.findIndex(
-      (item) => item.frameIndex === frameIndex
+      (item) => item.frameIndex === frameIndex,
     );
 
     if (existingIndex !== -1) {
@@ -527,7 +717,7 @@ function VideoEditTimeline(
     });
 
     editor.scene.userData.keyframes[characterUuid].sort(
-      (a, b) => a.frameIndex - b.frameIndex
+      (a, b) => a.frameIndex - b.frameIndex,
     );
 
     // message("alert", ` ${characterUuid} ${frameIndex} 키 프레임 추가`);
@@ -535,6 +725,7 @@ function VideoEditTimeline(
     onload();
     selectedObject(characterUuid); // 선택된 객체 설정
     timelineObjectActive(characterUuid); // 타임라인 객체 활성화
+    hideKeyframeMenu();
   }
 
   // 키프레임 삭제
@@ -545,7 +736,7 @@ function VideoEditTimeline(
     const frameIndex = keyNumber * _framesPerSecond;
     const keyframes = editor.scene.userData.keyframes[characterUuid];
     const existingIndex = keyframes.findIndex(
-      (item) => item.frameIndex === frameIndex
+      (item) => item.frameIndex === frameIndex,
     );
     console.log(`existingIndex : ${existingIndex}`);
     if (existingIndex !== -1) {
@@ -577,11 +768,18 @@ function VideoEditTimeline(
 
   document.body.addEventListener("mousedown", (event) => {
     console.log("timeline-mousedown");
+    // preventObjectDeselection();
+
     if (!event.target.closest("#renderViewContainer")) {
       if (currentRender) {
         currentRender.renderClose();
         currentRender = null;
       }
+    }
+
+    if (event.target.closest("canvas")) {
+      console.log("CANVAST 들어옴");
+      hideKeyframeMenu();
     }
   });
   // 옵션 버튼
@@ -596,7 +794,7 @@ function VideoEditTimeline(
     console.log("optionBtn");
     e.currentTarget.classList.toggle("active");
     const optionGroup = document.querySelector(
-      "#videoEditTimeline .optionGroup"
+      "#videoEditTimeline .optionGroup",
     );
     optionGroup.classList.toggle("active");
   });
