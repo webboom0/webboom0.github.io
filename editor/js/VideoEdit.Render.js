@@ -10,7 +10,7 @@ class Render {
     this._newWindow = _newWindow;
 
     this.editorScene = editor.scene;
-    this.camera = new THREE.PerspectiveCamera(75, 400 / 300, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(100, 1600 / 900, 0.1, 1000);
     this.mixers = [];
     this.clock = new THREE.Clock();
     this.currentFrame = 0;
@@ -86,7 +86,7 @@ class Render {
     });
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.camera.position.set(0, 10, 100);
+    this.camera.position.set(0, 10, 110);
     this.camera.lookAt(this.editorScene.position);
     this.controls.update();
 

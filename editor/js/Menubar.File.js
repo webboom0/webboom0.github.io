@@ -1,4 +1,5 @@
 import { UIPanel, UIRow, UIHorizontalRule } from "./libs/ui.js";
+import { initMusic } from "./VideoEdit.js";
 
 function MenubarFile(editor) {
   const strings = editor.strings;
@@ -20,9 +21,11 @@ function MenubarFile(editor) {
     <i class="fas fa-file"></i>
     <span>${strings.getKey("menubar/file/new")}</span>
   `;
-  newButton.onClick(function () {
+  newButton.onClick(async function () {
     if (confirm("Any unsaved data will be lost. Are you sure?")) {
       editor.clear();
+      await initMusic(); // 새로운 프로젝트 시작 시 음악 초기화
+
       // location.reload();
     }
   });

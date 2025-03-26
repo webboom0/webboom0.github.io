@@ -1476,7 +1476,7 @@ select:hover {
   right: 2px;
   bottom: 2px;
   border-radius: 50%;
-  // background: linear-gradient(145deg, #202020, #2a2a2a);
+  /* background: linear-gradient(145deg, #202020, #2a2a2a); */
   background: linear-gradient(145deg, #080808, #2a2a2a);
   z-index: 2;
   box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.8),

@@ -45,39 +45,52 @@ function VideoEditTimeline(
     });
   }
 
+  // editor.clear() 함수 내에서 userData 초기화
+  // editor.clear = function () {
+  //   // 기존 씬의 모든 객체 제거
+  //   while (editor.scene.children.length > 0) {
+  //     editor.scene.remove(editor.scene.children[0]);
+  //   }
+  //   // userData 초기화
+  //   editor.scene.userData = {};
+  //   editor.signals.sceneGraphChanged.dispatch();
+
+  //   // 새 프로젝트 시작 시 필요한 객체 추가
+  //   background.create();
+  // };
+
   const background = {
     create: function () {
       console.log("background");
+      /*
+      // 이미 배경이 추가된 경우 함수 종료
+      if (editor.scene.userData.hasBackground) {
+        console.log("Background already exists, skipping creation.");
+        return;
+      }
 
-      // 기존 배경 객체 찾기
-      const existingBackground = editor.scene.children.find(
+      let existingBackground = editor.scene.children.find(
         (child) => child.name === "Background" || child.userData.isBackground,
       );
 
-      // 이미 배경이 있으면 생성하지 않음
       if (existingBackground) {
         console.log("Background already exists");
-
-        // 기존 배경 객체의 속성 재설정
         existingBackground.traverse((child) => {
           if (child.isMesh) {
             child.userData.isBackground = true;
             child.userData.notSelectable = true;
             child.userData.notEditable = true;
-            // child.userData.excludeFromTimeline = true;
             child.raycast = () => null;
           }
         });
 
-        // Transform Controls 이벤트 재설정
         editor.signals.objectSelected.remove(background.onObjectSelected);
         editor.signals.objectSelected.add(background.onObjectSelected);
 
-        return;
+        return; // 배경이 이미 존재하면 함수 종료
       }
-
+*/
       const loader = new OBJLoader();
-
       loader.load(
         "/files/background.obj",
         (object) => {
@@ -86,66 +99,89 @@ function VideoEditTimeline(
             return;
           }
 
-          object.name = "Background";
-          object.position.set(-97.17106296034069, 0, 50.12830519275826);
-          object.scale.set(6.18, 7.46, 9.88);
-          /*
-          // 객체를 보이지만 선택/편집 불가능하게 설정
-          object.userData.isBackground = true;
-          object.userData.notSelectable = true;
-          object.userData.notEditable = true;
-          // 객체의 모든 메시에 대해서도 선택/편집 불가능하게 설정
-          object.traverse((child) => {
-            if (child.isMesh) {
-              child.userData.isBackground = true;
-              child.userData.notSelectable = true;
-              child.userData.notEditable = true;
-              // 마우스 이벤트 무시
-              child.raycast = () => {};
-            }
-          });
-          editor.scene.add(object);
-          editor.scene.background = true; // 백그라운드 생성 상태 저장
-          console.log("scene.background:", editor.scene.background);
-*/
+          const existingBackground = editor.scene.children.find(
+            (child) => child.name === "_Background",
+          );
+          console.log("existingBackground");
+          console.log(existingBackground);
+          if (!existingBackground) {
+            object.name = "_Background";
+            object.position.set(-97.17106296034069, -10, 50.12830519275826);
+            object.scale.set(6.18, 10, 9.88);
 
-          // 메시 재질 설정 수정
-          object.traverse((child) => {
-            if (child.isMesh) {
-              // child.material = new THREE.MeshStandardMaterial({
-              //   color: 0x808080,
-              //   side: THREE.DoubleSide,
-              //   transparent: true,
-              //   opacity: 1,
-              //   depthTest: true,
-              //   depthWrite: true,
-              // });
+            object.traverse((child) => {
+              if (child.isMesh) {
+                child.material = new THREE.MeshStandardMaterial({
+                  color: 0x808080,
+                  side: THREE.DoubleSide,
+                  transparent: true,
+                  opacity: 1,
+                });
+                child.userData.isBackground = true;
+                child.userData.notSelectable = true;
+                child.userData.notEditable = true;
+                child.raycast = () => null;
+              }
+            });
+            // 객체 자체에도 설정
+            object.userData.isBackground = true;
+            object.userData.notSelectable = true;
+            object.userData.notEditable = true;
 
-              // 선택/편집 불가능 설정
-              child.userData.isBackground = true;
-              child.userData.notSelectable = true;
-              child.userData.notEditable = true;
-              // child.userData.excludeFromTimeline = true;
-              child.raycast = () => null;
-            }
-          });
+            editor.scene.add(object);
+          }
 
-          // 객체 자체에도 설정
-          object.userData.isBackground = true;
-          object.userData.notSelectable = true;
-          object.userData.notEditable = true;
-          // object.userData.excludeFromTimeline = true;
+          // 바닥 객체 생성
+          const existingFloor = editor.scene.children.find(
+            (child) => child.name === "_Floor",
+          );
 
-          editor.scene.add(object);
-          // scene 패널 업데이트를 위한 시그널 발생
+          if (!existingFloor) {
+            const floorGeometry = new THREE.BoxGeometry(101.68, 1.72, 104.272);
+            const floorMaterial = new THREE.MeshStandardMaterial({
+              color: 0x808080,
+              side: THREE.DoubleSide,
+              transparent: true,
+              opacity: 1,
+              envMapIntensity: 1.0,
+              roughness: 0.5,
+              metalness: 0.0,
+            });
+
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.position.set(0.0, -0.84, 0.0);
+            floor.name = "_Floor";
+            floor.userData.isBackground = true;
+            floor.userData.notSelectable = true;
+            floor.userData.notEditable = true;
+            floor.raycast = () => null;
+
+            editor.scene.add(floor);
+          } else {
+            console.log("Floor already exists");
+          }
+
+          // 조명 설정
+          const existingLight = editor.scene.children.find(
+            (child) => child.name === "_Light",
+          );
+
+          if (!existingLight) {
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+            hemiLight.position.set(0, 1, 0);
+            hemiLight.name = "_Light";
+            editor.scene.add(hemiLight);
+          } else {
+            console.log("Light already exists");
+          }
+
           editor.signals.sceneGraphChanged.dispatch();
           editor.scene.userData.hasBackground = true;
 
-          // Transform Controls 이벤트 설정
           editor.signals.objectSelected.remove(background.onObjectSelected);
           editor.signals.objectSelected.add(background.onObjectSelected);
 
-          console.log("Background loaded successfully");
+          console.log("Background and floor loaded successfully");
         },
         undefined,
         (error) => {
@@ -164,7 +200,6 @@ function VideoEditTimeline(
       }
     },
   };
-
   let editorSceneChildrenCall = false;
   console.log("editor");
   console.log(editor.scene.children.length);
@@ -175,7 +210,11 @@ function VideoEditTimeline(
     }
   });
   // 새 파일일 경우에만 Background 생성
-  if (editor.scene.children.length === 0) {
+  if (
+    editor.scene.children.length === 0 &&
+    !editor.scene.userData.hasBackground
+  ) {
+    console.log("background호출");
     background.create();
   }
   let editorSceneChildrenCallIntervalTime = 0;
@@ -184,7 +223,7 @@ function VideoEditTimeline(
     console.log(editor.scene.children.length);
     if (Object.keys(editor.scene.userData).length > 0) {
       editorSceneChildrenCall = true;
-      background.create(); // 바닥 생성
+      // background.create(); // 바닥 생성
       onload(); // 타임라인 생성
     }
     editorSceneChildrenCallIntervalTime++;
@@ -428,31 +467,31 @@ function VideoEditTimeline(
     );
 
     // 여러 개의 Background가 있다면 첫 번째만 남기고 나머지 제거
-    if (backgrounds.length > 1) {
-      console.log("Removing duplicate backgrounds");
-      backgrounds.slice(1).forEach((bg) => {
-        editor.scene.remove(bg);
-      });
-    }
+    // if (backgrounds.length > 1) {
+    //   console.log("Removing duplicate backgrounds");
+    //   backgrounds.slice(1).forEach((bg) => {
+    //     editor.scene.remove(bg);
+    //   });
+    // }
 
-    // 남은 Background의 속성 재설정
-    if (backgrounds.length > 0) {
-      const background = backgrounds[0];
-      background.traverse((child) => {
-        if (child.isMesh) {
-          child.userData.isBackground = true;
-          child.userData.notSelectable = true;
-          child.userData.notEditable = true;
-          child.userData.excludeFromTimeline = true;
-          child.raycast = () => null;
-        }
-      });
+    // // 남은 Background의 속성 재설정
+    // if (backgrounds.length > 0) {
+    //   const background = backgrounds[0];
+    //   background.traverse((child) => {
+    //     if (child.isMesh) {
+    //       child.userData.isBackground = true;
+    //       child.userData.notSelectable = true;
+    //       child.userData.notEditable = true;
+    //       child.userData.excludeFromTimeline = true;
+    //       child.raycast = () => null;
+    //     }
+    //   });
 
-      background.userData.isBackground = true;
-      background.userData.notSelectable = true;
-      background.userData.notEditable = true;
-      background.userData.excludeFromTimeline = true;
-    }
+    //   background.userData.isBackground = true;
+    //   background.userData.notSelectable = true;
+    //   background.userData.notEditable = true;
+    //   background.userData.excludeFromTimeline = true;
+    // }
 
     const keyframes = editor.scene.userData.keyframes;
     if (!keyframes) {

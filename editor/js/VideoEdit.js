@@ -2,14 +2,13 @@ import { UIPanel, UIInput, UIButton, UIRow } from "./libs/ui.js";
 import { VideoEditTimeline } from "./VideoEdit.timeline.js";
 import { Render } from "./VideoEdit.Render.js";
 import { Music } from "./Music.js";
-
+let signals = null; // 시그널 참조 저장
+let videoTimeline; // videoTimeline 변수를 함수 스코프에서 선언
+const _totalSeconds = 180; // 예시로 180초
+const _framesPerSecond = 60; // 초당 프레임
+const _newWindow = true; // renderView 새 창 열기
 function VideoEdit(editor) {
-  const signals = editor.signals; // 시그널 참조 저장
-  let videoTimeline; // videoTimeline 변수를 함수 스코프에서 선언
-
-  const _totalSeconds = 180; // 예시로 180초
-  const _framesPerSecond = 60; // 초당 프레임
-  const _newWindow = true; // renderView 새 창 열기
+  signals = editor.signals;
 
   const videoContainer = new UIPanel();
   videoContainer.setId("videoEdit");
@@ -53,45 +52,7 @@ function VideoEdit(editor) {
     optionGroup.add(setSecondsBtn);
   };
 
-  // FFmpeg 초기화 및 Music 인스턴스 생성을 Promise로 처리
-  let musicInitialized = false;
-  const initMusic = async () => {
-    if (!musicInitialized) {
-      try {
-        console.log("Initializing FFmpeg and Music editor...");
-        const { createFFmpeg, fetchFile } = FFmpeg;
-        const ffmpeg = createFFmpeg({ log: true });
-        await ffmpeg.load();
-        console.log("FFmpeg loaded successfully");
-
-        // ffmpeg와 fetchFile을 함께 전달
-        const musicEditor = new Music({ ffmpeg, fetchFile }, _totalSeconds);
-
-        // Music 인스턴스가 제대로 초기화되었는지 확인
-        if (musicEditor && musicEditor.toJSON) {
-          console.log("Music editor initialized successfully");
-          const musicContainer = document.getElementById("music");
-          if (musicContainer) {
-            musicContainer.appendChild(musicEditor.dom);
-            editor.music = musicEditor;
-            musicInitialized = true;
-            console.log("Music editor DOM added to container");
-          } else {
-            console.error("Music container element not found");
-          }
-        } else {
-          console.error("Music editor not properly initialized");
-        }
-      } catch (error) {
-        console.error("FFmpeg/Music initialization error:", error);
-      }
-    }
-  };
-
-  // Music 초기화
-  initMusic().catch((error) => {
-    console.error("Music initialization failed:", error);
-  });
+  initMusic();
 
   // 비디오 타임라인 초기화 함수
   const initVideoTimeline = async () => {
@@ -156,4 +117,52 @@ function VideoEdit(editor) {
   return videoContainer;
 }
 
-export { VideoEdit };
+async function initMusic() {
+  // FFmpeg 초기화 및 Music 인스턴스 생성을 Promise로 처리
+  let musicInitialized = false;
+  const initMusic = async () => {
+    if (!musicInitialized) {
+      try {
+        console.log("Initializing FFmpeg and Music editor...");
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = createFFmpeg({ log: true });
+        await ffmpeg.load();
+        console.log("FFmpeg loaded successfully");
+
+        // ffmpeg와 fetchFile을 함께 전달
+        const musicEditor = new Music({ ffmpeg, fetchFile }, _totalSeconds);
+
+        // editor.music에 Music 인스턴스 할당
+        editor.music = musicEditor;
+        // 기존 UI 제거
+        const musicContainer = document.getElementById("music");
+        // Music 인스턴스가 제대로 초기화되었는지 확인
+        if (musicContainer) {
+          while (musicContainer.firstChild) {
+            musicContainer.removeChild(musicContainer.firstChild);
+          }
+          musicContainer.appendChild(musicEditor.dom);
+          editor.music = musicEditor;
+          musicInitialized = true;
+          console.log("Music editor DOM added to container");
+        } else {
+          console.error("Music container element not found");
+        }
+      } catch (error) {
+        console.error("FFmpeg/Music initialization error:", error);
+      }
+    } else {
+      // 이미 초기화된 경우 상태 초기화
+      if (editor.music && typeof editor.music.clearSettings === "function") {
+        editor.music.clearSettings();
+      }
+    }
+  };
+
+  // Music 초기화
+  initMusic().catch((error) => {
+    console.error("Music initialization failed:", error);
+  });
+}
+
+export { VideoEdit, initMusic };

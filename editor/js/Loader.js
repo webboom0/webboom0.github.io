@@ -22,6 +22,11 @@ function Loader(editor) {
     return object;
   }
 
+  // 파일명에서 이름 추출
+  function getFileNameFromPath(path) {
+    return path.split("/").pop().split(".").shift();
+  }
+
   const scope = this;
 
   this.texturePath = "";
@@ -241,6 +246,11 @@ function Loader(editor) {
 
             const loader = new FBXLoader(manager);
             const object = loader.parse(contents);
+            // 전체 객체의 크기를 0.1로 조절
+            object.scale.set(0.1, 0.1, 0.1);
+            //  이름 설정
+            object.name = getFileNameFromPath(file.name);
+
             // 객체 처리
             processObject(object);
 
@@ -252,7 +262,60 @@ function Loader(editor) {
 
         break;
       }
+      /*
+      case "fbx": {
+        console.log("Loader.js - fbx");
+        reader.addEventListener(
+          "load",
+          async function (event) {
+            const contents = event.target.result;
 
+            const { FBXLoader } = await import(
+              "three/addons/loaders/FBXLoader.js"
+            );
+
+            const loader = new FBXLoader(manager);
+            const object = loader.parse(contents);
+
+            // 전체 객체의 크기를 0.1로 조절
+            object.scale.set(0.1, 0.1, 0.1);
+
+            // 스킨드 메시가 있는지 확인
+            let hasSkinnedMesh = false;
+            object.traverse((child) => {
+              if (child.isSkinnedMesh) {
+                hasSkinnedMesh = true;
+              }
+            });
+
+            // 스킨드 메시가 없는 경우에만 새로운 메시 생성
+            if (!hasSkinnedMesh) {
+              let rootBone = null;
+              object.traverse((child) => {
+                if (child.isBone && !child.parent.isBone) {
+                  rootBone = child;
+                }
+              });
+
+              if (rootBone && rootBone.skeleton) {
+                console.log("Creating mesh for skeleton");
+                const newMesh = createSkinnedMesh(rootBone.skeleton);
+                object.add(newMesh);
+              }
+            }
+
+            // 기존 객체 처리
+            processObject(object);
+
+            editor.execute(new AddObjectCommand(editor, object));
+          },
+          false,
+        );
+        reader.readAsArrayBuffer(file);
+
+        break;
+      }
+*/
       case "glb": {
         reader.addEventListener(
           "load",
@@ -424,6 +487,51 @@ function Loader(editor) {
 
         break;
       }
+
+      // case "obj": {
+      //   console.log("loader.js - obj 들어옴");
+      //   reader.addEventListener(
+      //     "load",
+      //     async function (event) {
+      //       const contents = event.target.result;
+
+      //       const { OBJLoader } = await import(
+      //         "three/addons/loaders/OBJLoader.js"
+      //       );
+
+      //       const loader = new OBJLoader();
+      //       const object = loader.parse(contents);
+      //       object.name = filename;
+
+      //       // 더 단순한 Phong 재질 사용
+      //       const wallMaterial = new THREE.MeshPhongMaterial({
+      //         color: 0xcccccc, // 밝은 회색
+      //         specular: 0x111111, // 반사광 색상
+      //         shininess: 30, // 광택
+      //         side: THREE.DoubleSide,
+      //       });
+
+      //       // 모든 메시에 재질 적용
+      //       object.traverse((child) => {
+      //         if (child.isMesh) {
+      //           child.material = wallMaterial;
+      //           // 그림자 설정
+      //           child.castShadow = true;
+      //           child.receiveShadow = true;
+      //         }
+      //       });
+
+      //       // 객체 처리
+      //       processObject(object);
+
+      //       editor.execute(new AddObjectCommand(editor, object));
+      //     },
+      //     false,
+      //   );
+      //   reader.readAsText(file);
+
+      //   break;
+      // }
 
       case "obj": {
         reader.addEventListener(

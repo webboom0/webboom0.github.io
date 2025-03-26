@@ -10,6 +10,7 @@ import {
 } from "./libs/ui.js";
 
 function Music({ ffmpeg, fetchFile }, _totalSeconds) {
+  console.log("Music 들어옴");
   // FFmpeg 인스턴스와 fetchFile은 외부에서 전달받은 것을 사용
   const container = new UIPanel();
   container.setId("musicEdit");
