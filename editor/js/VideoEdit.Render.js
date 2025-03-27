@@ -157,14 +157,27 @@ class Render {
       });
   }
 
+  // initMixers() {
+  //   this.mixers = [];
+  //   this.editorScene.children.forEach((character) => {
+  //     const mixer = new THREE.AnimationMixer(character);
+  //     this.mixers.push(mixer);
+  //     character.animations.forEach((clip) => {
+  //       mixer.clipAction(clip).play();
+  //     });
+  //   });
+  // }
+
   initMixers() {
     this.mixers = [];
     this.editorScene.children.forEach((character) => {
-      const mixer = new THREE.AnimationMixer(character);
-      this.mixers.push(mixer);
-      character.animations.forEach((clip) => {
-        mixer.clipAction(clip).play();
-      });
+      if (character.animations && character.animations.length > 0) {
+        const mixer = new THREE.AnimationMixer(character);
+        this.mixers.push(mixer);
+        character.animations.forEach((clip) => {
+          mixer.clipAction(clip).play();
+        });
+      }
     });
   }
 
@@ -180,6 +193,8 @@ class Render {
 
     requestAnimationFrame(this.animate);
 
+    const delta = this.clock.getDelta();
+
     // 오디오 컨텍스트의 현재 시간을 기준으로 프레임 계산
     if (this.audioContext && this.source) {
       const currentAudioTime = this.audioContext.currentTime;
@@ -191,9 +206,12 @@ class Render {
       if (Math.abs(this.currentFrame - expectedFrame) > 1) {
         this.currentFrame = expectedFrame;
       }
+    } else {
+      // 오디오가 없는 경우, clock을 사용하여 프레임 계산
+      this.currentFrame += delta * this._framesPerSecond;
     }
 
-    const delta = this.clock.getDelta();
+    // 애니메이션 믹서 업데이트
     this.mixers.forEach((mixer) => mixer.update(delta));
     if (this.editorScene.userData.keyframes) {
       this.editorScene.children.forEach((character) => {
@@ -240,8 +258,6 @@ class Render {
       .padStart(2, "0")}:${displayMinutes
       .toString()
       .padStart(2, "0")}:${displaySeconds.toString().padStart(2, "0")}`;
-
-    this.currentFrame += 1;
 
     if (this.renderer) {
       this.renderer.render(this.editorScene, this.camera);

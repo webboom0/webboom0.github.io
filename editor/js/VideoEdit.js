@@ -5,7 +5,7 @@ import { Music } from "./Music.js";
 let signals = null; // 시그널 참조 저장
 let videoTimeline; // videoTimeline 변수를 함수 스코프에서 선언
 const _totalSeconds = 180; // 예시로 180초
-const _framesPerSecond = 60; // 초당 프레임
+const _framesPerSecond = 30; // 초당 프레임
 const _newWindow = true; // renderView 새 창 열기
 function VideoEdit(editor) {
   signals = editor.signals;
