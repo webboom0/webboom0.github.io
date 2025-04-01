@@ -62,34 +62,7 @@ function VideoEditTimeline(
   const background = {
     create: function () {
       console.log("background");
-      /*
-      // 이미 배경이 추가된 경우 함수 종료
-      if (editor.scene.userData.hasBackground) {
-        console.log("Background already exists, skipping creation.");
-        return;
-      }
 
-      let existingBackground = editor.scene.children.find(
-        (child) => child.name === "Background" || child.userData.isBackground,
-      );
-
-      if (existingBackground) {
-        console.log("Background already exists");
-        existingBackground.traverse((child) => {
-          if (child.isMesh) {
-            child.userData.isBackground = true;
-            child.userData.notSelectable = true;
-            child.userData.notEditable = true;
-            child.raycast = () => null;
-          }
-        });
-
-        editor.signals.objectSelected.remove(background.onObjectSelected);
-        editor.signals.objectSelected.add(background.onObjectSelected);
-
-        return; // 배경이 이미 존재하면 함수 종료
-      }
-*/
       const loader = new OBJLoader();
       loader.load(
         "/files/background.obj",
@@ -99,7 +72,22 @@ function VideoEditTimeline(
             return;
           }
 
-          const existingBackground = editor.scene.children.find(
+          // 씬의 배경색을 검정색으로 설정
+          editor.scene.background = new THREE.Color(0x000000);
+
+          // Stage 그룹 생성 또는 찾기
+          let stageGroup = editor.scene.children.find(
+            (child) => child.name === "Stage",
+          );
+
+          if (!stageGroup) {
+            stageGroup = new THREE.Group();
+            stageGroup.name = "Stage";
+            editor.scene.add(stageGroup);
+          }
+
+          // Background 객체 생성 및 추가
+          const existingBackground = stageGroup.children.find(
             (child) => child.name === "_Background",
           );
           console.log("existingBackground");
@@ -128,16 +116,16 @@ function VideoEditTimeline(
             object.userData.notSelectable = true;
             object.userData.notEditable = true;
 
-            editor.scene.add(object);
+            stageGroup.add(object);
           }
 
           // 바닥 객체 생성
-          const existingFloor = editor.scene.children.find(
+          const existingFloor = stageGroup.children.find(
             (child) => child.name === "_Floor",
           );
 
           if (!existingFloor) {
-            const floorGeometry = new THREE.BoxGeometry(101.68, 1.72, 104.272);
+            const floorGeometry = new THREE.BoxGeometry(147.446, 1, 111.747);
             const floorMaterial = new THREE.MeshStandardMaterial({
               color: 0x808080,
               side: THREE.DoubleSide,
@@ -149,20 +137,127 @@ function VideoEditTimeline(
             });
 
             const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-            floor.position.set(0.0, -0.84, 0.0);
+            floor.position.set(-2.975, -0.305, 0.0);
             floor.name = "_Floor";
             floor.userData.isBackground = true;
             floor.userData.notSelectable = true;
             floor.userData.notEditable = true;
             floor.raycast = () => null;
 
-            editor.scene.add(floor);
+            stageGroup.add(floor);
           } else {
             console.log("Floor already exists");
           }
 
+          // 뒷벽 생성
+          const existingWallBack = stageGroup.children.find(
+            (child) => child.name === "_WallBack",
+          );
+
+          if (!existingWallBack) {
+            const wallBackGeometry = new THREE.BoxGeometry(
+              153.102,
+              64.088,
+              1.0,
+            );
+            const wallBackMaterial = new THREE.MeshStandardMaterial({
+              color: 0xcccccc, // 더 밝은 회색
+              side: THREE.DoubleSide,
+              transparent: false, // 투명도 제거
+              opacity: 1,
+              envMapIntensity: 0.5, // 환경맵 강도 감소
+              roughness: 0.8, // 거칠기 증가
+              metalness: 0.1, // 금속성 감소
+            });
+
+            const wallBack = new THREE.Mesh(wallBackGeometry, wallBackMaterial);
+            wallBack.position.set(-1.064, 25.427, -56.129);
+            wallBack.name = "_WallBack";
+            wallBack.userData.isBackground = true;
+            wallBack.userData.notSelectable = true;
+            wallBack.userData.notEditable = true;
+            wallBack.raycast = () => null;
+
+            stageGroup.add(wallBack);
+          } else {
+            console.log("wallBack already exists");
+          }
+
+          // 왼쪽벽 생성
+          const existingWallLeft = stageGroup.children.find(
+            (child) => child.name === "_WallLeft",
+          );
+
+          if (!existingWallLeft) {
+            const wallLeftGeometry = new THREE.BoxGeometry(
+              110.902,
+              64.088,
+              1.0,
+            );
+            const wallLeftMaterial = new THREE.MeshStandardMaterial({
+              color: 0xcccccc, // 더 밝은 회색
+              side: THREE.DoubleSide,
+              transparent: false, // 투명도 제거
+              opacity: 1,
+              envMapIntensity: 0.5, // 환경맵 강도 감소
+              roughness: 0.8, // 거칠기 증가
+              metalness: 0.1, // 금속성 감소
+            });
+
+            const wallLeft = new THREE.Mesh(wallLeftGeometry, wallLeftMaterial);
+            wallLeft.position.set(-76.641, 25.427, -0.681);
+            wallLeft.rotation.set(0.0, 89.51, 0.0);
+            wallLeft.name = "_WallLeft";
+            wallLeft.userData.isBackground = true;
+            wallLeft.userData.notSelectable = true;
+            wallLeft.userData.notEditable = true;
+            wallLeft.raycast = () => null;
+
+            stageGroup.add(wallLeft);
+          } else {
+            console.log("wallLeft already exists");
+          }
+
+          // 오른쪽벽 생성
+          const existingWallRight = stageGroup.children.find(
+            (child) => child.name === "_WallRight",
+          );
+
+          if (!existingWallRight) {
+            const wallRightGeometry = new THREE.BoxGeometry(
+              110.902,
+              64.088,
+              1.0,
+            );
+            const wallRightMaterial = new THREE.MeshStandardMaterial({
+              color: 0xcccccc, // 더 밝은 회색
+              side: THREE.DoubleSide,
+              transparent: false, // 투명도 제거
+              opacity: 1,
+              envMapIntensity: 0.5, // 환경맵 강도 감소
+              roughness: 0.8, // 거칠기 증가
+              metalness: 0.1, // 금속성 감소
+            });
+
+            const wallRight = new THREE.Mesh(
+              wallRightGeometry,
+              wallRightMaterial,
+            );
+            wallRight.position.set(74.538, 25.427, -0.681);
+            wallRight.rotation.set(0.0, 89.51, 0.0);
+            wallRight.name = "_WallRight";
+            wallRight.userData.isBackground = true;
+            wallRight.userData.notSelectable = true;
+            wallRight.userData.notEditable = true;
+            wallRight.raycast = () => null;
+
+            stageGroup.add(wallRight);
+          } else {
+            console.log("wallRight already exists");
+          }
+
           // 조명 설정
-          const existingLight = editor.scene.children.find(
+          const existingLight = stageGroup.children.find(
             (child) => child.name === "_Light",
           );
 
@@ -170,10 +265,16 @@ function VideoEditTimeline(
             const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
             hemiLight.position.set(0, 1, 0);
             hemiLight.name = "_Light";
-            editor.scene.add(hemiLight);
+            stageGroup.add(hemiLight);
           } else {
             console.log("Light already exists");
           }
+
+          // Stage 그룹 전체에 대한 userData 설정
+          stageGroup.userData.isBackground = true;
+          stageGroup.userData.notSelectable = true;
+          stageGroup.userData.notEditable = true;
+          stageGroup.userData.excludeFromTimeline = true;
 
           editor.signals.sceneGraphChanged.dispatch();
           editor.scene.userData.hasBackground = true;
