@@ -69,6 +69,11 @@ class Render {
     this.stopButton.dom.innerHTML = `<i class="fas fa-stop"></i> <span class="blind">정지</span>`;
     this.controlsDiv.add(this.stopButton);
 
+    this.closeButton = new UIButton();
+    this.closeButton.setClass("closeButton button-3d");
+    this.closeButton.dom.innerHTML = `<i class="fas fa-times"></i> <span class="blind">닫기</span>`;
+    this.controlsDiv.add(this.closeButton);
+
     this.controlsDiv.dom.appendChild(this.timeText);
 
     this.playButton.dom.addEventListener("click", this.renderPlay.bind(this));
@@ -83,6 +88,11 @@ class Render {
         this.renderClose();
         document.getElementById("renderViewContainer").remove();
       }
+    });
+
+    this.closeButton.dom.addEventListener("click", (event) => {
+      this.renderClose();
+      document.getElementById("renderViewContainer").remove();
     });
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
