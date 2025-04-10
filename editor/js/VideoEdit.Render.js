@@ -241,16 +241,35 @@ class Render {
         }
 
         if (prevFrame && nextFrame) {
+          // 정확한 보간 계산
           const t =
             (this.currentFrame - prevFrame.frameIndex) /
             (nextFrame.frameIndex - prevFrame.frameIndex);
+
+          // 위치 보간
           character.position.lerpVectors(
             prevFrame.position,
             nextFrame.position,
             t,
           );
+          // 조명 객체의 visibility 처리
+          if (character.isLight && prevFrame.hasOwnProperty("visible")) {
+            // 정확한 프레임에서 visibility 변경
+            const visibilityChangeFrame =
+              prevFrame.frameIndex +
+              (nextFrame.frameIndex - prevFrame.frameIndex) * 1;
+            character.visible =
+              this.currentFrame >= visibilityChangeFrame
+                ? nextFrame.visible
+                : prevFrame.visible;
+          }
         } else if (prevFrame) {
           character.position.copy(prevFrame.position);
+
+          // 조명 객체인 경우 visibility 적용
+          if (character.isLight && prevFrame.hasOwnProperty("visible")) {
+            character.visible = prevFrame.visible;
+          }
         }
       });
     }
@@ -376,6 +395,11 @@ class Render {
         this.editorScene.userData.keyframes[character.uuid]?.[0]?.position;
       if (initialPosition) {
         character.position.copy(initialPosition);
+
+        // 조명 객체인 경우 초기 visibility 설정
+        if (character.isLight && initialFrame.hasOwnProperty("visible")) {
+          character.visible = initialFrame.visible;
+        }
       }
     });
     this.timeText.innerText = "00:00:00";

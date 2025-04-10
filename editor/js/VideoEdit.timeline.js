@@ -851,10 +851,22 @@ function VideoEditTimeline(
       keyframes.splice(existingIndex, 1);
     }
 
-    keyframes.push({
+    // 조명 객체인 경우 visibility 정보도 저장
+    const frameData = {
       frameIndex: frameIndex,
       position: character.position.clone(),
-    });
+    };
+
+    if (character.isLight) {
+      frameData.visible = character.visible;
+    }
+
+    keyframes.push(frameData);
+
+    // keyframes.push({
+    //   frameIndex: frameIndex,
+    //   position: character.position.clone(),
+    // });
 
     editor.scene.userData.keyframes[characterUuid].sort(
       (a, b) => a.frameIndex - b.frameIndex,
@@ -986,6 +998,12 @@ function VideoEditTimeline(
           const character = Children.getChildren(uuid);
           const pos = frames[i].position;
           character.position.copy(pos);
+
+          // 조명 객체인 경우 visibility 적용
+          if (character.isLight && frames[i].hasOwnProperty("visible")) {
+            character.visible = frames[i].visible;
+          }
+
           // 트랜스폼 모드 변경
           _signals.transformModeChanged.dispatch("translate");
         }
